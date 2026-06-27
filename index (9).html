@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Profiler</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+body {
+  margin: 0; 
+  font-family: 'Share Tech Mono', monospace; 
+  background: #222; 
+  color: #ccc; 
+  display: flex; 
+  flex-direction: column; 
+  height: 100vh; 
+}
+
+/* Заголовок */
+header {
+  background-color: #111; 
+  padding: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  text-align: center; 
+  letter-spacing: 2px;
+}
+<!-- Вставьте сюда обновленное содержимое заголовка -->
+
+#language-switch {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+button.lang-btn {
+  background-color: #333;
+  color: #aaa;
+  border: 1px solid #555;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Share Tech Mono'; 
+  transition: background 0.3s, transform 0.2s;
+}
+button.lang-btn:hover {
+  background-color: #444;
+  transform: scale(1.05);
+}
+
+main {
+  flex: 1;
+  display: flex; 
+  flex-direction: column; 
+  padding: 10px 20px;
+}
+
+#chat {
+  flex: 1; 
+  background: #222;
+  border: 2px solid #555;
+  border-radius: 8px; 
+  padding: 20px; 
+  overflow-y: auto; 
+  font-family: 'Share Tech Mono';
+  font-size: 14px;
+  max-height: 80vh;
+}
+
+.message {
+  margin-bottom: 15px;
+}
+.message-user {
+  color: #8f8;
+  font-weight: bold;
+}
+.message-bot {
+  color: #ccc;
+  font-weight: bold;
+}
+
+#question-box {
+  display: flex; 
+  margin-top: 10px; 
+  gap: 10px;
+}
+#question {
+  flex: 1;
+  padding: 10px; 
+  background-color: #444;
+  border: 2px solid #555;
+  border-radius: 4px; 
+  color: #fff; 
+  font-family: 'Share Tech Mono'; 
+}
+#send-btn {
+  padding: 10px 20px;
+  background-color: #555;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Share Tech Mono';
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  color: #fff;
+}
+#send-btn:hover {
+  background-color: #666;
+  transform: scale(1.05);
+}
+</style>
+</head>
+<body>
+
+<header>Profiler.exe</header>
+
+<div id="language-switch">
+  <button class="lang-btn" onclick="setLanguage('ru')">Русский</button>
+  <button class="lang-btn" onclick="setLanguage('ua')">Українська</button>
+  <button class="lang-btn" onclick="setLanguage('en')">English</button>
+</div>
+
+<main>
+  <div id="chat"></div>
+  <div id="question-box">
+    <input type="text" id="question" placeholder="Ваш вопрос..." />
+    <button id="send-btn" onclick="askQuestion()">Ответить</button>
+  </div>
+</main>
+
+<script>
+const chat = document.getElementById('chat');
+const questionInput = document.getElementById('question');
+
+let currentLanguage = 'ru';
+
+const responses = {
+  ru: {
+    "как приготовить яичницу": "Для приготовления яичницы вам понадобится свежие яйца, немного масла, соль и перец. Разогрейте сковороду, добавьте масло, разбейте яйца, посолите и поперчите по вкусу. Жарьте до тех пор, пока белки не схватятся, а желтки останутся жидкими или твердыми, по вашему предпочтению. Это быстрый и вкусный завтрак, который можно дополнить овощами или зеленью.",
+    "что такое нейросеть": "Нейросеть — это сложная модель машинного обучения, которая имитирует работу человеческого мозга. Она состоит из многочисленных узлов (нейронов), объединенных связями и способных обучаться на данных. Нейросети широко используются для распознавания изображений, текста, речи и для принятия решений в автоматизированных системах.",
+    "как мне зарегистрироваться": "Для регистрации обычно нужно пройти на сайт или приложение, заполнить короткую форму с вашими данными и подтвердить почту или номер телефона. После этого у вас появится доступ к функциям сервиса.",
+    "default": "Это очень интересный вопрос! Постараюсь рассказать подробнее. :)"
+  },
+  ua: {
+    "як приготувати яєчницю": "Для приготування яєчниці потрібно розбити яйця на розігріту сковороду, додати сіль і перець за смаком, і смажити до готовності. Можна додати зелень або овочі для більшого смаку. Це швидко і смачно — ідеальний сніданок.",
+    "що таке нейромережа": "Нейромережа — це модель штучного інтелекту, що імітує роботу людського мозку. Вона складається з багатьох шарів нейронів, які навчаються розпізнавати зразки у даних і приймати рішення.",
+    "як зареєструватися": "Зазвичай потрібно перейти на сайт, заповнити форму, підтвердити свою адресу електронної пошти, і тоді ви отримаєте доступ до можливостей сервісу.",
+    "default": "Це дуже цікаве питання! Давайте поговоримо про це докладніше. :)"
+  },
+  en: {
+    "how to make fried eggs": "To make fried eggs, crack the eggs into a hot skillet, add some salt and pepper, and cook until the whites are set and the yolk reaches your preferred doneness. You can add vegetables or herbs for extra flavor. It's a quick and tasty breakfast.",
+    "what is a neural network": "A neural network is a machine learning model inspired by the human brain. It consists of interconnected layers of neurons that learn to recognize patterns in data, used in image recognition, speech processing, and more.",
+    "how to register": "Usually, you visit the website, fill out the registration form, and confirm your email. Then you'll get access to the system.",
+    "default": "That's a very interesting question! Let me tell you more about it..."
+  }
+};
+
+function askQuestion() {
+  const question = questionInput.value.trim().toLowerCase();
+  if (!question) return;
+  addMessage(question, 'user');
+
+  let answer = '';
+  for (const key in responses[currentLanguage]) {
+    if (question.includes(key)) {
+      answer = responses[currentLanguage][key];
+      break;
+    }
+  }
+  if (!answer) { answer = responses[currentLanguage]["default"]; }
+  setTimeout(() => addMessage(answer, 'bot'), 800);
+}
+
+function setLanguage(lang) {
+  currentLanguage = lang;
+  console.log('Язык переключен на:', currentLanguage);
+  document.querySelector('header').textContent = {
+    'ru': 'Profiler.exe',
+    'ua': 'Profiler.exe',
+    'en': 'Profiler.exe'
+  }[lang];
+
+  document.getElementById('question').placeholder = {
+    'ru': 'Ваш вопрос...',
+    'ua': 'Ваше питання...',
+    'en': 'Your question...'
+  }[lang];
+
+  document.getElementById('send-btn').textContent = {
+    'ru': 'Ответить',
+    'ua': 'Відповісти',
+    'en': 'Answer'
+  }[lang];
+}
+
+function addMessage(text, sender) {
+  const div = document.createElement('div');
+  div.className = 'message ' + (sender === 'user' ? 'message-user' : 'message-bot');
+  div.innerHTML = (sender === 'user' ? 'Вы: ' : 'Профайлер: ') + text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+setLanguage('ru'); // стартуем с русского
+</script>
+</body>
+</html>
